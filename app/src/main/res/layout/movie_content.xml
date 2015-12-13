@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="20dip">
+
+    <TextView
+        android:id="@+id/mpaa_rating"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:textColor="@android:color/darker_gray"
+        tools:text="PG-13" />
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        tools:text="Movie Title: Episode Two (part 3) XXXIII" />
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/RelativeLayout01"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp">
+
+        <ImageView
+            android:id="@+id/clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:tint="@android:color/darker_gray"
+            android:src="@drawable/ic_access_time_white_18dp"
+            android:contentDescription="time" />
+
+        <TextView
+            android:id="@+id/duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_gravity="center_vertical"
+            android:textColor="@android:color/white"
+            tools:text="124 min" />
+        
+        <android.support.v4.widget.Space
+            android:layout_width="10dp"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/star"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:tint="@android:color/darker_gray"
+            android:src="@drawable/ic_star_rate_white_18dp"
+            android:contentDescription="stars" />
+
+        <TextView
+            android:id="@+id/stars"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_gravity="center_vertical"
+            android:textColor="@android:color/white"
+            tools:text="7.3" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/plot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/text_margin"
+        android:textColor="@android:color/white"
+        tools:text="@string/large_text" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_margin="10dp"
+        android:columnCount="2"
+        android:layout_gravity="center_horizontal">
+        <TextView
+            android:layout_width="100dip"
+            android:text="@string/label_genre"
+            android:gravity="end" />
+        <TextView
+            android:id="@+id/genre"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="fill_horizontal"
+            android:layout_marginStart="15dp"
+            android:layout_marginLeft="15dp"
+            android:textColor="@android:color/white"
+            tools:text="Drama, Romance, Comedy" />
+
+        <TextView
+            android:layout_width="100dip"
+            android:text="@string/label_director"
+            android:gravity="end" />
+        <TextView
+            android:id="@+id/director"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="fill_horizontal"
+            android:layout_marginStart="15dp"
+            android:layout_marginLeft="15dp"
+            android:textColor="@android:color/white"
+            tools:text="Steven Smith, adfafasdfafasdfasfasfad fadfadfadfadsfadsfasfasfas, Jill Parsons, Tim Hilks" />
+
+        <TextView
+            android:layout_width="100dip"
+            android:text="@string/label_cast"
+            android:gravity="end" />
+        <TextView
+            android:id="@+id/cast"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="fill_horizontal"
+            android:layout_marginStart="15dp"
+            android:layout_marginLeft="15dp"
+            android:textColor="@android:color/white"
+            tools:text="Tom Cruise abcdefghijklmnopqrstuvwxyz asdafa afafafa adfasdflkafsdasdfaksfa Jane Doe" />
+    </GridLayout>
+    
+</LinearLayout>

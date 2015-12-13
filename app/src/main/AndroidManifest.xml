@@ -1,13 +1,32 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.skylerbock.nowplaying">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
+        <activity
+            android:name=".listing.ListingActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".movie.MovieActivity"
+            android:label=""
+            android:theme="@style/AppTheme.NoActionBar"
+            android:parentActivityName=".listing.ListingActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".listing.ListingActivity" />
+        </activity>
     </application>
 
 </manifest>
