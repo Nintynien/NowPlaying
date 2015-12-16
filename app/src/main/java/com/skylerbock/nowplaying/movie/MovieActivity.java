@@ -26,6 +26,7 @@ public class MovieActivity extends MvpActivity<IMovieView, IMoviePresenter> {
     @Bind(R.id.poster) ImageView header;
     @Bind(R.id.fab) FloatingActionButton fab;
     @Bind(R.id.toolbar) Toolbar toolbar;
+    @Bind(R.id.year) TextView year;
     @Bind(R.id.mpaa_rating) TextView mpaa;
     @Bind(R.id.name) TextView name;
     @Bind(R.id.genre) TextView genre;
@@ -55,6 +56,7 @@ public class MovieActivity extends MvpActivity<IMovieView, IMoviePresenter> {
                 .load(movie.getPosterUrl())
                 .into(header);
 
+        year.setText(movie.getYear());
         mpaa.setText(movie.getMpaaRating());
         name.setText(movie.getTitle());
         genre.setText(movie.getGenre());
