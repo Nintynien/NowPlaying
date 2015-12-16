@@ -3,6 +3,7 @@ package com.skylerbock.nowplaying.listing;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +13,7 @@ import android.util.TypedValue;
 import com.hannesdorfmann.mosby.mvp.viewstate.lce.LceViewState;
 import com.hannesdorfmann.mosby.mvp.viewstate.lce.MvpLceViewStateActivity;
 import com.hannesdorfmann.mosby.mvp.viewstate.lce.data.CastedArrayListLceViewState;
+import com.skylerbock.nowplaying.AppPreferences;
 import com.skylerbock.nowplaying.BuildConfig;
 import com.skylerbock.nowplaying.GridAutofitLayoutManager;
 import com.skylerbock.nowplaying.R;
@@ -19,6 +21,9 @@ import com.skylerbock.nowplaying.movie.Movie;
 import com.skylerbock.nowplaying.movie.MovieActivity;
 import com.squareup.picasso.Picasso;
 
+import org.ocpsoft.prettytime.PrettyTime;
+
+import java.util.Date;
 import java.util.List;
 
 import butterknife.Bind;
@@ -30,6 +35,9 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
 
     @Bind(R.id.rv) RecyclerView rv;
     ListingAdapter adapter;
+    Snackbar snackbar;
+
+    public static final long warning_threshold = 1000 * 60 * 60 * 24; // 1 day in milliseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +114,20 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
     public void showContent() {
         super.showContent();
         contentView.setRefreshing(false);
+
+        // Show banner warning user of old data
+        Date lastUpdated = new AppPreferences(this).getKeyPrefsLastUpdated();
+        // Check to see if the time since the last update was over our threshold
+        if ((System.currentTimeMillis() - lastUpdated.getTime()) > warning_threshold) {
+            snackbar = Snackbar.make(rv, "Last updated " + new PrettyTime().format(lastUpdated), Snackbar.LENGTH_INDEFINITE);
+            snackbar.show();
+        }
+        else
+        {
+            // Dismiss any snackbar that might be showing
+            if (snackbar != null)
+                snackbar.dismiss();
+        }
     }
 
     @Override
