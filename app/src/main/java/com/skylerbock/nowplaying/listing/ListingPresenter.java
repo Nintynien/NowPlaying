@@ -16,12 +16,15 @@ public class ListingPresenter extends MvpBasePresenter<IListingView> implements 
     // This is a hard refresh that retrieves information from the network in a background thread
     public void loadMovies(Context context, boolean pullToRefresh) {
         getView().showLoading(pullToRefresh);
-        new ListingModel().updateDatabase(context, null);
+
+        // Do a full refresh if requested, or if we don't have any movies in our database
+        if (pullToRefresh || !updateData(context))
+            new ListingModel().updateDatabase(context, null);
     }
 
     @Override
     // This is a soft refresh that doesn't go to the network (only gets values from the database)
-    public void updateData(Context context) {
+    public boolean updateData(Context context) {
         List<Movie> results = DBHelper.getMovies(context);
 
         if (isViewAttached() && !results.isEmpty()) {
@@ -31,5 +34,8 @@ public class ListingPresenter extends MvpBasePresenter<IListingView> implements 
                 v.showContent();
             }
         }
+
+        // Return true if we found movies
+        return !results.isEmpty();
     }
 }

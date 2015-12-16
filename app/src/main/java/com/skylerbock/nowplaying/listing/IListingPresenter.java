@@ -9,5 +9,5 @@ import com.hannesdorfmann.mosby.mvp.MvpPresenter;
  */
 public interface IListingPresenter extends MvpPresenter<IListingView> {
     void loadMovies(final Context context, final boolean pullToRefresh);
-    void updateData(Context context);
+    boolean updateData(Context context);
 }

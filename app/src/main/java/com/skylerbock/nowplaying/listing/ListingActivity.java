@@ -124,7 +124,7 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
     }
 
     // Event that's fired when the background refresh is completed
-    public void onEventMainThread(ListingModel.RefreshCompleted value) {
+    public void onEventMainThread(ListingModel.RefreshCompletedEvent value) {
         // Refresh completed, refresh our shown data
         presenter.updateData(this);
     }

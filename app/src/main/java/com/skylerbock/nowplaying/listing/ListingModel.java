@@ -3,6 +3,7 @@ package com.skylerbock.nowplaying.listing;
 import android.content.Context;
 import android.util.Log;
 
+import com.skylerbock.nowplaying.AppPreferences;
 import com.skylerbock.nowplaying.DBHelper;
 import com.skylerbock.nowplaying.movie.Movie;
 import com.squareup.okhttp.OkHttpClient;
@@ -19,6 +20,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +40,14 @@ public class ListingModel {
         new Thread(new UpdateThread(c, zipcode)).start();
     }
 
-    public class RefreshCompleted {}
+    public class RefreshCompletedEvent {
+        public boolean successful = false;
+        public int movieCount = 0;
+        public RefreshCompletedEvent(boolean successful, int movieCount) {
+            this.movieCount = movieCount;
+            this.successful = successful;
+        }
+    }
 
     public class UpdateThread implements Runnable {
 
@@ -46,6 +55,8 @@ public class ListingModel {
 
         String zipcode;
         Context context;
+        boolean successful = false;
+        int movieCount = 0;
 
         public UpdateThread(Context context, String zipcode) {
             this.context = context;
@@ -54,6 +65,7 @@ public class ListingModel {
 
         public void run() {
             Log.i(TAG, "UpdateThread starting");
+            long start = System.currentTimeMillis();
 
             // Use a zipcode if provided, otherwise don't send a location
             // Google will attempt to guess for us, presumably by IP address? (it doesn't matter, it's out of our hands)
@@ -83,20 +95,26 @@ public class ListingModel {
                         Movie m = getMovie(imdb, trailer);
 
                         // Save the movie to our list to update the database with
-                        if (m != null)
+                        if (m != null) {
                             movieList.add(m);
+                            movieCount++;
+                        }
                     }
 
                     // Save all the movies to our database (also removes old movies)
-                    DBHelper.saveMovies(context, movieList);
+                    successful = DBHelper.saveMovies(context, movieList);
+                    if (successful) {
+                        // Save time that we last updated
+                        new AppPreferences(context).setKeyPrefsLastUpdated(new Date());
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             // Post the completed event so the listeners know to update themselves
-            EventBus.getDefault().post(new RefreshCompleted());
-            Log.i(TAG, "UpdateThread finished");
+            EventBus.getDefault().post(new RefreshCompletedEvent(successful, movieCount));
+            Log.i(TAG, "UpdateThread finished with " + movieCount + " movies in " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 
