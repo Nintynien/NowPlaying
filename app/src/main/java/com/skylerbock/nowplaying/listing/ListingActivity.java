@@ -6,9 +6,13 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 
 import com.hannesdorfmann.mosby.mvp.viewstate.lce.LceViewState;
 import com.hannesdorfmann.mosby.mvp.viewstate.lce.MvpLceViewStateActivity;
@@ -70,6 +74,56 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
     public void onPause() {
         EventBus.getDefault().unregister(this);
         super.onPause();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_listing, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    private boolean sortDescending = false;
+    private ListingAdapter.SortType sortLastType = ListingAdapter.SortType.Title;
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.sort:
+                // Popup menu for user to select sort option (pressing again toggles sort direction)
+                View menuItemView = findViewById(R.id.sort);
+                PopupMenu popupMenu = new PopupMenu(this, menuItemView);
+                popupMenu.inflate(R.menu.menu_sort_options);
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.sort_option_name:
+                                if (sortLastType == ListingAdapter.SortType.Title) {
+                                    sortDescending = !sortDescending;
+                                }
+                                else {
+                                    sortLastType = ListingAdapter.SortType.Title;
+                                    sortDescending = true;
+                                }
+                                adapter.sortMovies(ListingAdapter.SortType.Title, sortDescending);
+                                return true;
+                            case R.id.sort_option_rating:
+                                if (sortLastType == ListingAdapter.SortType.Rating) {
+                                    sortDescending = !sortDescending;
+                                }
+                                else {
+                                    sortLastType = ListingAdapter.SortType.Rating;
+                                    sortDescending = true;
+                                }
+                                adapter.sortMovies(ListingAdapter.SortType.Rating, sortDescending);
+                                return true;
+                            default:
+                        }
+                        return false;
+                    }
+                });
+                popupMenu.show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @NonNull

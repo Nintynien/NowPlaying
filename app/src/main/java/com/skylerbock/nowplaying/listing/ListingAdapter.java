@@ -11,6 +11,8 @@ import com.skylerbock.nowplaying.movie.Movie;
 import com.skylerbock.nowplaying.R;
 import com.squareup.picasso.Picasso;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import butterknife.Bind;
@@ -56,6 +58,61 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
 
     public List<Movie> getMovies() {
         return movies;
+    }
+
+    public enum SortType {
+        Title,
+        Rating
+    }
+
+    public void sortMovies(SortType type) {
+        sortMovies(type, true);
+    }
+
+    public void sortMovies(SortType type, final boolean descending) {
+        switch (type) {
+            case Title:
+                Collections.sort(movies, new Comparator<Movie>() {
+                    @Override
+                    public int compare(Movie lhs, Movie rhs) {
+                        if (descending)
+                            return lhs.getTitle().compareTo(rhs.getTitle());
+                        else
+                            return rhs.getTitle().compareTo(lhs.getTitle());
+                    }
+                });
+                this.notifyDataSetChanged();
+                break;
+            case Rating:
+                Collections.sort(movies, new Comparator<Movie>() {
+                    @Override
+                    public int compare(Movie lhs, Movie rhs) {
+                        float lRate = 0;
+                        float rRate = 0;
+                        // IMDB ratings just have 1 decimal place, so we're just making it more significant so it's not lost in the typecast
+                        try {
+                            lRate = Float.parseFloat(lhs.getImdbRating())*10;
+                        } catch (Exception e) {
+                            //ignore
+                        }
+                        try {
+                            rRate = Float.parseFloat(rhs.getImdbRating())*10;
+                        } catch (Exception e) {
+                            //ignore
+                        }
+
+                        if (descending)
+                            return (int)(rRate - lRate);
+                        else
+                            return (int)(lRate - rRate);
+                    }
+                });
+                this.notifyDataSetChanged();
+                break;
+            default:
+                // Don't sort
+                break;
+        }
     }
 
     @Override

@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".listing.ListingActivity">
+    <item android:id="@+id/sort_option_name"
+        android:title="@string/action_sort_name"
+        app:showAsAction="never"/>
+    <item android:id="@+id/sort_option_rating"
+        android:title="@string/action_sort_rating"
+        app:showAsAction="never" />
+</menu>

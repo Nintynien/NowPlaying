@@ -97,4 +97,12 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
+
+    <string name="action_sort">Sort</string>
+    <string name="action_sort_name">Name</string>
+    <string name="action_sort_rating">Rating</string>
+
+    <string name="action_view">View</string>
+    <string name="action_view_grid">Grid</string>
+    <string name="action_view_list">List</string>
 </resources>
