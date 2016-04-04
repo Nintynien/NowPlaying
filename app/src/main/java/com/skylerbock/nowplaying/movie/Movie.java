@@ -19,8 +19,9 @@ public class Movie implements Parcelable {
     private String duration;
     private String mpaaRating;
     private String imdbRating;
+    private String movieid;
 
-    public Movie(String title, String posterUrl, String trailerUrl, String imdbId, String year, String plot, String director, String cast, String genre, String duration, String mpaaRating, String imdbRating) {
+    public Movie(String title, String posterUrl, String trailerUrl, String imdbId, String year, String plot, String director, String cast, String genre, String duration, String mpaaRating, String imdbRating, String movieid) {
 
         this.title = title;
         this.posterUrl = posterUrl;
@@ -34,6 +35,7 @@ public class Movie implements Parcelable {
         this.duration = duration;
         this.mpaaRating = mpaaRating;
         this.imdbRating = imdbRating;
+        this.movieid = movieid;
     }
 
     public String getTitle() {
@@ -82,6 +84,8 @@ public class Movie implements Parcelable {
         return imdbRating;
     }
 
+    public String getMovieid() { return  movieid; }
+
     protected Movie(Parcel in) {
         title = in.readString();
         posterUrl = in.readString();
@@ -95,6 +99,7 @@ public class Movie implements Parcelable {
         duration = in.readString();
         mpaaRating = in.readString();
         imdbRating = in.readString();
+        movieid = in.readString();
     }
 
     @Override
@@ -116,6 +121,7 @@ public class Movie implements Parcelable {
         dest.writeString(duration);
         dest.writeString(mpaaRating);
         dest.writeString(imdbRating);
+        dest.writeString(movieid);
     }
 
     @SuppressWarnings("unused")

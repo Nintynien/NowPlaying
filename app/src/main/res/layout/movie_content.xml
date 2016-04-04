@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/movie_layout"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -100,7 +101,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
         android:textColor="@android:color/white"
-        tools:text="@string/large_text" />
+        tools:text="abc" />
 
     <GridLayout
         android:layout_width="match_parent"
@@ -151,5 +152,11 @@
             android:textColor="@android:color/white"
             tools:text="Tom Cruise abcdefghijklmnopqrstuvwxyz asdafa afafafa adfasdflkafsdasdfaksfa Jane Doe" />
     </GridLayout>
-    
+    <com.skylerbock.nowplaying.ShowtimesView
+        android:id="@+id/showtimes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/text_margin">
+
+    </com.skylerbock.nowplaying.ShowtimesView>
 </LinearLayout>

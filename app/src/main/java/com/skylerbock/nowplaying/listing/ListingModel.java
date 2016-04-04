@@ -92,7 +92,7 @@ public class ListingModel {
                         String trailer = entry.getValue();
 
                         // Retrieve the movie object
-                        Movie m = getMovie(imdb, trailer);
+                        Movie m = getMovie(imdb, trailer, "3db64253dbf295f3"); //TODO: Remove debug movieid
 
                         // Save the movie to our list to update the database with
                         if (m != null) {
@@ -160,7 +160,7 @@ public class ListingModel {
     }
 
     // Returns a movie object from an OMDB API REST call
-    private Movie getMovie(final String imdbId, final String trailer) {
+    private Movie getMovie(final String imdbId, final String trailer, final String movieid) {
         //http://www.omdbapi.com/?i=tt1951266&plot=short&r=json
         Request request = new Request.Builder()
                 .url("http://www.omdbapi.com/?i="+imdbId+"&plot=short&r=json")
@@ -190,7 +190,7 @@ public class ListingModel {
                     String mpaa = j.getString("Rated");
 
                     // Create the movie object from the data we received
-                    movie = new Movie(title, poster, trailer, imdbId, year, plot, director, cast, genre, runtime, mpaa, rating);
+                    movie = new Movie(title, poster, trailer, imdbId, year, plot, director, cast, genre, runtime, mpaa, rating, movieid);
                 }
             }
         } catch (IOException | JSONException e) {

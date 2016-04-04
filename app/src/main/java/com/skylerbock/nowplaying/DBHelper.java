@@ -22,7 +22,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private static Lock lock = new ReentrantLock();
 
     // If you change the database schema, you must increment the database version.
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 4;
     public static final String DATABASE_NAME = "NowPlaying.db";
 
     private static final String TEXT_TYPE = " TEXT";
@@ -42,7 +42,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     MovieTable.COLUMN_GENRE         + TEXT_TYPE + COMMA_SEP +
                     MovieTable.COLUMN_DURATION      + TEXT_TYPE + COMMA_SEP +
                     MovieTable.COLUMN_MPAA_RATING   + TEXT_TYPE + COMMA_SEP +
-                    MovieTable.COLUMN_IMDB_RATING   + TEXT_TYPE +
+                    MovieTable.COLUMN_IMDB_RATING   + TEXT_TYPE + COMMA_SEP +
+                    MovieTable.COLUMN_MOVIE_ID      +
             " )";
 
     private static final String SQL_DELETE_MOVIES = "DROP TABLE IF EXISTS " + MovieTable.TABLE_NAME;
@@ -62,6 +63,7 @@ public class DBHelper extends SQLiteOpenHelper {
         public static final String COLUMN_DURATION = "Duration";
         public static final String COLUMN_MPAA_RATING = "mpaaRating";
         public static final String COLUMN_IMDB_RATING = "imdbRating";
+        public static final String COLUMN_MOVIE_ID = "movieId";
     }
 
     public static DBHelper getInstance(Context context) {
@@ -107,7 +109,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 MovieTable.COLUMN_GENRE,
                 MovieTable.COLUMN_DURATION,
                 MovieTable.COLUMN_MPAA_RATING,
-                MovieTable.COLUMN_IMDB_RATING
+                MovieTable.COLUMN_IMDB_RATING,
+                MovieTable.COLUMN_MOVIE_ID
         };
 
         Cursor c = db.query(
@@ -137,7 +140,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 String duration = c.getString(c.getColumnIndex(MovieTable.COLUMN_DURATION));
                 String mpaa = c.getString(c.getColumnIndex(MovieTable.COLUMN_MPAA_RATING));
                 String rating = c.getString(c.getColumnIndex(MovieTable.COLUMN_IMDB_RATING));
-                movies.add(new Movie(name, poster, trailer, id, year, plot, director, cast, genre, duration, mpaa, rating));
+                String movieid = c.getString(c.getColumnIndex(MovieTable.COLUMN_MOVIE_ID));
+                movies.add(new Movie(name, poster, trailer, id, year, plot, director, cast, genre, duration, mpaa, rating, movieid));
             } while (c.moveToNext());
         }
 
@@ -174,6 +178,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 values.put(MovieTable.COLUMN_DURATION, m.getDuration());
                 values.put(MovieTable.COLUMN_MPAA_RATING, m.getMpaaRating());
                 values.put(MovieTable.COLUMN_IMDB_RATING, m.getImdbRating());
+                values.put(MovieTable.COLUMN_MOVIE_ID, m.getMovieid());
 
                 // Insert or throw (we want to throw an exception on error to correctly roll back our changes)
                 db.insertOrThrow(MovieTable.TABLE_NAME, null, values);

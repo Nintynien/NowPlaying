@@ -12,17 +12,24 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.skylerbock.nowplaying.R;
+import com.skylerbock.nowplaying.ShowtimesView;
 import com.squareup.picasso.Picasso;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MovieActivity extends MvpActivity<IMovieView, IMoviePresenter> {
+    @Bind(R.id.showtimes) ShowtimesView showtimesView;
     @Bind(R.id.poster) ImageView header;
     @Bind(R.id.fab) FloatingActionButton fab;
     @Bind(R.id.toolbar) Toolbar toolbar;
@@ -83,6 +90,9 @@ public class MovieActivity extends MvpActivity<IMovieView, IMoviePresenter> {
             fab.setLayoutParams(p);
             fab.hide();
         }
+
+        // Start loading showtime listing
+        showtimesView.loadShowtimes(movie.getMovieid());
     }
 
     // Takes youtube ID or youtube url
