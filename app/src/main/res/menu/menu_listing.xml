@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".listing.ListingActivity">
+    <item android:id="@+id/sort"
+        android:title="@string/action_sort"
+        android:icon="@drawable/ic_sort_white_24dp"
+        app:showAsAction="always"/>
+    <item android:id="@+id/view"
+        android:title="@string/action_view"
+        android:icon="@drawable/ic_view_module_white_24dp"
+        app:showAsAction="always"/>
+</menu>
