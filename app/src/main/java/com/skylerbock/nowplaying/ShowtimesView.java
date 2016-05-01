@@ -34,6 +34,9 @@ public class ShowtimesView extends LinearLayout {
 
     public void addShowtimes(Map<String, List<String>> result) {
         this.removeAllViews(); // Remove all the views since we're going to readd them all (removes spinner)
+
+        if (result == null) return;
+
         for (Map.Entry<String, List<String>> entry : result.entrySet()) {
             addShowtimesForTheater(entry.getKey(), entry.getValue());
         }

@@ -49,6 +49,13 @@ public class ListingModel {
         }
     }
 
+    // This is the data that we pull from HTML
+    public class MovieData {
+        public String imdb;
+        public String trailer;
+        public String mid;
+    }
+
     public class UpdateThread implements Runnable {
 
         public static final String TAG = "UpdateThread";
@@ -83,16 +90,14 @@ public class ListingModel {
                     String body = response.body().string();
 
                     // Gets a list of imdb movie ids and their trailer
-                    Map<String,String> movies = getMovies(body);
+                    Map<String,MovieData> movies = getMovies(body);
 
                     List<Movie> movieList = new ArrayList<>();
                     // Get movie information from omdb and populate the movie object
-                    for (Map.Entry<String, String> entry : movies.entrySet()) {
-                        String imdb = entry.getKey();
-                        String trailer = entry.getValue();
+                    for (MovieData data : movies.values()) {
 
                         // Retrieve the movie object
-                        Movie m = getMovie(imdb, trailer, "3db64253dbf295f3"); //TODO: Remove debug movieid
+                        Movie m = getMovie(data.imdb, data.trailer, data.mid);
 
                         // Save the movie to our list to update the database with
                         if (m != null) {
@@ -119,9 +124,9 @@ public class ListingModel {
     }
 
     // This returns a list of IMDB id's by parsing html
-    private Map<String, String> getMovies(String doc) {
+    private Map<String, MovieData> getMovies(String doc) {
         // Using a map to prevent duplicate movies (since movies can play at multiple theaters)
-        Map<String, String> map = new HashMap<>();
+        Map<String, MovieData> map = new HashMap<>();
 
         Document html = Jsoup.parse(doc);
         Element body = html.body();
@@ -129,6 +134,22 @@ public class ListingModel {
         // Go through each movie element
         Elements movies = body.getElementsByClass("movie");
         for (Element m : movies) {
+            // Get the name element for the movie as that contains the movie id
+            String name = m.getElementsByClass("name").html();
+            try {
+                // We need to URL decode the html so we can correctly match the youtube url below
+                name = java.net.URLDecoder.decode(name, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                Log.e("URLDecode", "ERROR DECODING HTML");
+                e.printStackTrace();
+            }
+
+            String movieId = null;
+            Matcher matcher = Pattern.compile("mid=([^&]*)").matcher(name);
+            if (matcher.find()) {
+                movieId = matcher.group(1);
+            }
+
             // Get the info element for the movie as that contains the information we want to parse
             String info = m.getElementsByClass("info").html();
             try {
@@ -140,7 +161,7 @@ public class ListingModel {
             }
 
             // Parse imdb id
-            Matcher matcher = Pattern.compile("/(tt\\d+)/").matcher(info);
+            matcher = Pattern.compile("/(tt\\d+)/").matcher(info);
             if (matcher.find()) {
                 String imdbid = matcher.group(1);
 
@@ -151,8 +172,13 @@ public class ListingModel {
                     trailer = matcher.group(1);
                 }
 
+                MovieData data = new MovieData();
+                data.imdb = imdbid;
+                data.trailer = trailer;
+                data.mid = movieId;
+
                 // Save the movie into our list
-                map.put(imdbid, trailer);
+                map.put(imdbid, data);
             }
         }
 

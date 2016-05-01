@@ -84,6 +84,7 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
 
     private boolean sortDescending = false;
     private ListingAdapter.SortType sortLastType = ListingAdapter.SortType.Title;
+    private boolean viewGrid = true;
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.sort:
@@ -120,6 +121,16 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
                     }
                 });
                 popupMenu.show();
+                return true;
+            case R.id.view:
+                // Toggle view mode (grid vs list)
+                if (viewGrid) {
+                    item.setIcon(R.drawable.ic_view_list_white_24dp);
+                }
+                else {
+                    item.setIcon(R.drawable.ic_view_module_white_24dp);
+                }
+                viewGrid = !viewGrid;
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
