@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -43,6 +44,10 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
 
     public static final long warning_threshold = 1000 * 60 * 60 * 24; // 1 day in milliseconds
 
+    private boolean sortDescending = true; // Default sort descending
+    private ListingAdapter.SortType sortLastType = ListingAdapter.SortType.Rating; // Default sort by rating
+    private boolean viewGrid = true; // Default to grid view
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,10 +63,7 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
 
         contentView.setOnRefreshListener(this);
 
-        adapter = new ListingAdapter(this);
-        int columnWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 170, getResources().getDisplayMetrics());
-        rv.setLayoutManager(new GridAutofitLayoutManager(this, columnWidth));
-        rv.setAdapter(adapter);
+        setView(false);
     }
 
     @Override
@@ -82,9 +84,6 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
         return super.onCreateOptionsMenu(menu);
     }
 
-    private boolean sortDescending = false;
-    private ListingAdapter.SortType sortLastType = ListingAdapter.SortType.Title;
-    private boolean viewGrid = true;
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.sort:
@@ -125,16 +124,38 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
             case R.id.view:
                 // Toggle view mode (grid vs list)
                 if (viewGrid) {
+                    // Switch to grid, so show list icon
                     item.setIcon(R.drawable.ic_view_list_white_24dp);
                 }
                 else {
+                    // Switch to list, so show grid icon
                     item.setIcon(R.drawable.ic_view_module_white_24dp);
                 }
+                setView(viewGrid);
                 viewGrid = !viewGrid;
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void setView(boolean grid) {
+        List<Movie> data = getData();
+        RecyclerView.LayoutManager mgr = null;
+        if (grid)
+        {
+            adapter = new ListingAdapter(this, R.layout.item_grid);
+            int columnWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 170, getResources().getDisplayMetrics());
+            mgr = new GridAutofitLayoutManager(this, columnWidth);
+        }
+        else
+        {
+            adapter = new ListingAdapter(this, R.layout.item_listing);
+            mgr = new GridLayoutManager(this, 1);
+        }
+        setData(data);
+        rv.setLayoutManager(mgr);
+        rv.setAdapter(adapter);
     }
 
     @NonNull
@@ -161,8 +182,11 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
 
     @Override
     public void setData(List<Movie> data) {
+        if (adapter == null) return;
+
         adapter.setMovies(data);
         adapter.notifyDataSetChanged();
+        adapter.sortMovies(sortLastType, sortDescending); // Sort using the type that we have set
     }
 
     @Override

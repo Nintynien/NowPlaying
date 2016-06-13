@@ -1,5 +1,6 @@
 package com.skylerbock.nowplaying.listing;
 
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +27,8 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @Bind(R.id.poster) public ImageView poster;
         @Bind(R.id.title) public TextView title;
+        @Nullable @Bind(R.id.duration) TextView duration; // Optional based on the view being displayed
+        @Nullable @Bind(R.id.stars) TextView stars; // Optional based on the view being displayed
 
         public ViewHolder(View v) {
             super(v);
@@ -47,9 +50,11 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
 
     private List<Movie> movies = null;
     private ViewHolderPress listener = null;
+    private int view_resource;
 
-    public ListingAdapter(ViewHolderPress listener) {
+    public ListingAdapter(ViewHolderPress listener, int resource) {
         this.listener = listener;
+        this.view_resource = resource;
     }
 
     public void setMovies(List<Movie> movies) {
@@ -70,6 +75,8 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
     }
 
     public void sortMovies(SortType type, final boolean descending) {
+        if (movies == null) return; // Nothing to sort
+
         switch (type) {
             case Title:
                 Collections.sort(movies, new Comparator<Movie>() {
@@ -117,7 +124,7 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_grid, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(view_resource, parent, false);
         return new ViewHolder(v);
     }
 
@@ -130,6 +137,14 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
                 .error(R.drawable.error_poster)
                 .into(holder.poster);
         holder.title.setText(movie.getTitle());
+
+        if (holder.duration != null) {
+            holder.duration.setText(movie.getDuration());
+        }
+
+        if (holder.stars != null) {
+            holder.stars.setText(movie.getImdbRating());
+        }
     }
 
     @Override
