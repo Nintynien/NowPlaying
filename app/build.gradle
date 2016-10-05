@@ -11,8 +11,16 @@ android {
         versionCode 3
         versionName "3.0"
     }
+
     buildTypes {
+        debug {
+            resValue "string", "app_name", "Now Playing (debug)"
+            applicationIdSuffix ".debug"
+            versionNameSuffix " (debug)"
+        }
+
         release {
+            resValue "string", "app_name", "Now Playing"
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
