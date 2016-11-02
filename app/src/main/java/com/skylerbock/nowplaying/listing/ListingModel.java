@@ -5,10 +5,8 @@ import android.util.Log;
 
 import com.skylerbock.nowplaying.AppPreferences;
 import com.skylerbock.nowplaying.DBHelper;
+import com.skylerbock.nowplaying.NetworkHelper;
 import com.skylerbock.nowplaying.movie.Movie;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,7 +15,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,17 +31,63 @@ import de.greenrobot.event.EventBus;
  */
 public class ListingModel {
 
-    OkHttpClient client = new OkHttpClient();
-
     public void updateDatabase(Context c, String zipcode) {
         new Thread(new UpdateThread(c, zipcode)).start();
     }
 
+    public void getLocation(Context c) {
+        new Thread(new LocationThread(c)).start();
+    }
+
+    public class LocationFoundEvent {
+        public boolean successful = false;
+        public String zipCode = null;
+
+        public LocationFoundEvent(boolean successful, String zipCode) {
+            this.successful = successful;
+            this.zipCode = zipCode;
+        }
+    }
+
+    public class LocationThread implements Runnable {
+        public static final String TAG = "LocationThread";
+
+        String zipcode;
+        Context context;
+        boolean successful = false;
+
+        public LocationThread(Context context) {
+            this.context = context;
+        }
+
+        public void run() {
+            Log.i(TAG, "LocationThread starting");
+            long start = System.currentTimeMillis();
+
+            zipcode = NetworkHelper.getLocation();
+
+            if (zipcode != null) {
+                // Save zipcode to our database so we can debug our requests
+                successful = DBHelper.saveLocation(context, zipcode);
+                if (successful) {
+                    // Save zipcode in preferences
+                    new AppPreferences(context).setKeyPrefsLocation(zipcode);
+                }
+            }
+
+            // Post the completed event so the listeners know to update themselves
+            EventBus.getDefault().post(new LocationFoundEvent(successful, zipcode));
+            Log.i(TAG, "LocationThread finished with " + zipcode + " in " + (System.currentTimeMillis() - start) + "ms");
+        }
+    }
+
     public class RefreshCompletedEvent {
         public boolean successful = false;
+        public String zipcode = null;
         public int movieCount = 0;
-        public RefreshCompletedEvent(boolean successful, int movieCount) {
+        public RefreshCompletedEvent(boolean successful, String zipcode, int movieCount) {
             this.movieCount = movieCount;
+            this.zipcode = zipcode;
             this.successful = successful;
         }
     }
@@ -74,51 +117,46 @@ public class ListingModel {
             Log.i(TAG, "UpdateThread starting");
             long start = System.currentTimeMillis();
 
-            // Use a zipcode if provided, otherwise don't send a location
-            // Google will attempt to guess for us, presumably by IP address? (it doesn't matter, it's out of our hands)
-            String url = "http://google.com/movies" + ((zipcode==null) ? "" : ("?near=" + zipcode));
+            // Get zipcode if we don't have one currently
+            if (zipcode == null)
+            {
+                zipcode = NetworkHelper.getLocation();
+                if (zipcode != null) {
+                    // Save zipcode in preferences
+                    new AppPreferences(context).setKeyPrefsLocation(zipcode);
+                }
+            }
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
+            String body = NetworkHelper.getMovies(zipcode);
 
-            try {
-                // TODO: Fix the slowness of this request (looks like it's only the first call?) [Seems slowest on simulator]
-                Response response = client.newCall(request).execute();
-                if (response.isSuccessful())
-                {
-                    String body = response.body().string();
+            if (body != null) {
+                // Gets a list of imdb movie ids and their trailer
+                Map<String, MovieData> movies = getMovies(body);
 
-                    // Gets a list of imdb movie ids and their trailer
-                    Map<String,MovieData> movies = getMovies(body);
+                List<Movie> movieList = new ArrayList<>();
+                // Get movie information from omdb and populate the movie object
+                for (MovieData data : movies.values()) {
 
-                    List<Movie> movieList = new ArrayList<>();
-                    // Get movie information from omdb and populate the movie object
-                    for (MovieData data : movies.values()) {
+                    // Retrieve the movie object
+                    Movie m = getMovie(data.imdb, data.trailer, data.mid);
 
-                        // Retrieve the movie object
-                        Movie m = getMovie(data.imdb, data.trailer, data.mid);
-
-                        // Save the movie to our list to update the database with
-                        if (m != null) {
-                            movieList.add(m);
-                            movieCount++;
-                        }
-                    }
-
-                    // Save all the movies to our database (also removes old movies)
-                    successful = DBHelper.saveMovies(context, movieList);
-                    if (successful) {
-                        // Save time that we last updated
-                        new AppPreferences(context).setKeyPrefsLastUpdated(new Date());
+                    // Save the movie to our list to update the database with
+                    if (m != null) {
+                        movieList.add(m);
+                        movieCount++;
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                // Save all the movies to our database (also removes old movies)
+                successful = DBHelper.saveMovies(context, movieList);
+                if (successful) {
+                    // Save time that we last updated
+                    new AppPreferences(context).setKeyPrefsLastUpdated(new Date());
+                }
             }
 
             // Post the completed event so the listeners know to update themselves
-            EventBus.getDefault().post(new RefreshCompletedEvent(successful, movieCount));
+            EventBus.getDefault().post(new RefreshCompletedEvent(successful, zipcode, movieCount));
             Log.i(TAG, "UpdateThread finished with " + movieCount + " movies in " + (System.currentTimeMillis() - start) + "ms");
         }
     }
@@ -187,39 +225,30 @@ public class ListingModel {
 
     // Returns a movie object from an OMDB API REST call
     private Movie getMovie(final String imdbId, final String trailer, final String movieid) {
-        //http://www.omdbapi.com/?i=tt1951266&plot=short&r=json
-        Request request = new Request.Builder()
-                .url("http://www.omdbapi.com/?i="+imdbId+"&plot=short&r=json")
-                .build();
-
         Movie movie = null;
         try {
-            Response response = client.newCall(request).execute();
-            // Make sure the request was successful
-            if (response.isSuccessful()) {
-                String json = response.body().string();
+            String json = NetworkHelper.getMovie(imdbId);
 
-                JSONObject j = new JSONObject(json);
+            JSONObject j = new JSONObject(json);
 
-                // Make sure OMDB found the movie we are looking for
-                boolean ok = j.getBoolean("Response");
-                if (ok) {
-                    String title = j.getString("Title");
-                    String year = j.getString("Year");
-                    String poster = j.getString("Poster");
-                    String rating = j.getString("imdbRating");
-                    String plot = j.getString("Plot");
-                    String cast = j.getString("Actors");
-                    String director = j.getString("Director");
-                    String genre = j.getString("Genre");
-                    String runtime = j.getString("Runtime");
-                    String mpaa = j.getString("Rated");
+            // Make sure OMDB found the movie we are looking for
+            boolean ok = j.getBoolean("Response");
+            if (ok) {
+                String title = j.getString("Title");
+                String year = j.getString("Year");
+                String poster = j.getString("Poster");
+                String rating = j.getString("imdbRating");
+                String plot = j.getString("Plot");
+                String cast = j.getString("Actors");
+                String director = j.getString("Director");
+                String genre = j.getString("Genre");
+                String runtime = j.getString("Runtime");
+                String mpaa = j.getString("Rated");
 
-                    // Create the movie object from the data we received
-                    movie = new Movie(title, poster, trailer, imdbId, year, plot, director, cast, genre, runtime, mpaa, rating, movieid);
-                }
+                // Create the movie object from the data we received
+                movie = new Movie(title, poster, trailer, imdbId, year, plot, director, cast, genre, runtime, mpaa, rating, movieid);
             }
-        } catch (IOException | JSONException e) {
+        } catch (JSONException e) {
             Log.i("", "Error getting movie_content");
             e.printStackTrace();
         }

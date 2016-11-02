@@ -8,7 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.skylerbock.nowplaying.movie.Movie;
 
+import java.security.acl.LastOwnerException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,6 +28,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "NowPlaying.db";
 
     private static final String TEXT_TYPE = " TEXT";
+    private static final String INTEGER_TYPE = " INTEGER";
     private static final String PRIMARY_KEY = " PRIMARY KEY";
     private static final String COMMA_SEP = ",";
 
@@ -66,6 +69,22 @@ public class DBHelper extends SQLiteOpenHelper {
         public static final String COLUMN_MOVIE_ID = "movieId";
     }
 
+    private static final String SQL_CREATE_LOCATIONS =
+            "CREATE TABLE " + LocationTable.TABLE_NAME + " (" +
+                    LocationTable.COLUMN_ZIPCODE    + TEXT_TYPE    + COMMA_SEP +
+                    LocationTable.COLUMN_DATETIME   + INTEGER_TYPE + COMMA_SEP +
+                    PRIMARY_KEY + " (" + LocationTable.COLUMN_ZIPCODE + COMMA_SEP + LocationTable.COLUMN_DATETIME + ")" +
+                    " )";
+
+    private static final String SQL_DELETE_LOCATIONS = "DROP TABLE IF EXISTS " + LocationTable.TABLE_NAME;
+
+    public class LocationTable {
+        public static final String TABLE_NAME = "Location";
+
+        public static final String COLUMN_ZIPCODE = "zipcode";
+        public static final String COLUMN_DATETIME = "datetime";
+    }
+
     public static DBHelper getInstance(Context context) {
         if (singleton == null)
             singleton = new DBHelper(context);
@@ -79,12 +98,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_MOVIES);
+        db.execSQL(SQL_CREATE_LOCATIONS);
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
-        // to simply to discard the data and start over
+        // to simply discard the data and start over
         db.execSQL(SQL_DELETE_MOVIES);
+        db.execSQL(SQL_DELETE_LOCATIONS);
         onCreate(db);
     }
 
@@ -183,6 +204,77 @@ public class DBHelper extends SQLiteOpenHelper {
                 // Insert or throw (we want to throw an exception on error to correctly roll back our changes)
                 db.insertOrThrow(MovieTable.TABLE_NAME, null, values);
             }
+
+            db.setTransactionSuccessful();
+            ret = true;
+        }
+        finally {
+            db.endTransaction();
+            db.close();
+        }
+        lock.unlock();
+
+        return ret;
+    }
+
+    public static String getLatestLocation(Context context) {
+        lock.lock();
+        SQLiteDatabase db = getInstance(context).getReadableDatabase();
+
+        String[] projection = {
+                LocationTable.COLUMN_ZIPCODE
+        };
+
+        Cursor c = db.query(
+                LocationTable.TABLE_NAME,   // The table to query
+                projection,                 // The columns to return
+                null,                       // The columns for the WHERE clause
+                null,                       // The values for the WHERE clause
+                null,                       // don't group the rows
+                null,                       // don't filter by row groups
+                LocationTable.COLUMN_DATETIME + " DESC", // sort
+                "1"                         // limit to a single row
+        );
+
+        String zipcode = null;
+
+        if (c.moveToFirst())
+        {
+            zipcode = c.getString(c.getColumnIndex(LocationTable.COLUMN_ZIPCODE));
+        }
+
+        c.close();
+        db.close();
+        lock.unlock();
+
+        return zipcode;
+    }
+
+    public static boolean saveLocation(Context context, String zipcode) {
+        lock.lock();
+        SQLiteDatabase db = getInstance(context).getWritableDatabase();
+        boolean ret = false;
+
+        try {
+            db.beginTransaction();
+
+            ContentValues values = new ContentValues();
+            values.put(LocationTable.COLUMN_ZIPCODE, zipcode);
+            values.put(LocationTable.COLUMN_DATETIME, new Date().getTime());
+
+            // Insert or throw (we want to throw an exception on error to correctly roll back our changes)
+            db.insertOrThrow(LocationTable.TABLE_NAME, null, values);
+
+            // Limit max rows to 2000
+/*
+            String LIMIT_TO_2000_ROWS = "DELETE FROM " + LocationTable.TABLE_NAME +
+                    " WHERE " + LocationTable.COLUMN_DATETIME +
+                    " NOT IN (SELECT " + LocationTable.COLUMN_DATETIME + " FROM " + LocationTable.TABLE_NAME +
+                    " ORDER BY " + LocationTable.COLUMN_DATETIME + " DESC LIMIT 2000)";
+            db.execSQL(LIMIT_TO_2000_ROWS);
+*/
+            db.delete(LocationTable.TABLE_NAME, "? NOT IN (SELECT ? FROM ? ORDER BY ? DESC LIMIT 2000)",
+                    new String[] {LocationTable.COLUMN_DATETIME, LocationTable.COLUMN_DATETIME, LocationTable.TABLE_NAME, LocationTable.COLUMN_DATETIME});
 
             db.setTransactionSuccessful();
             ret = true;

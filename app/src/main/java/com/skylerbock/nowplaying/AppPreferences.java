@@ -11,6 +11,7 @@ import java.util.Date;
  */
 public class AppPreferences {
     public static final String KEY_PREFS_LAST_UPDATED = "last_updated";
+    public static final String KEY_PREFS_LOCATION = "location";
 
     private static final String APP_SHARED_PREFS = AppPreferences.class.getSimpleName(); //  Name of the file -.xml
     private SharedPreferences _sharedPrefs;
@@ -28,6 +29,16 @@ public class AppPreferences {
 
     public void setKeyPrefsLastUpdated(Date date) {
         _prefsEditor.putLong(KEY_PREFS_LAST_UPDATED, date.getTime());
+        _prefsEditor.commit();
+    }
+
+    public String getKeyPrefsLocation() {
+        String zipcode = _sharedPrefs.getString(KEY_PREFS_LOCATION, null);
+        return zipcode;
+    }
+
+    public void setKeyPrefsLocation(String zipcode) {
+        _prefsEditor.putString(KEY_PREFS_LOCATION, zipcode);
         _prefsEditor.commit();
     }
 }

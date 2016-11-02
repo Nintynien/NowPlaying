@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -63,7 +64,11 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
 
         contentView.setOnRefreshListener(this);
 
-        setView(false);
+        setView(viewGrid);
+        // Sorting happens when data is loaded from database
+
+        String location = new AppPreferences(this).getKeyPrefsLocation();
+        setLocation(location);
     }
 
     @Override
@@ -79,8 +84,47 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
+        super.onSaveInstanceState(savedInstanceState);
+
+        // Store UI state to the savedInstanceState.
+        savedInstanceState.putBoolean("viewGrid", viewGrid);
+        savedInstanceState.putBoolean("sortDescending", sortDescending);
+        savedInstanceState.putString("sortType", sortLastType.toString());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // Restore UI state from the savedInstanceState.
+        boolean grid = savedInstanceState.getBoolean("viewGrid");
+        if (grid != viewGrid) {
+            viewGrid = grid;
+            setView(viewGrid);
+        }
+
+        sortDescending = savedInstanceState.getBoolean("sortDescending");
+
+        String type = savedInstanceState.getString("sortType");
+        if (type == ListingAdapter.SortType.Rating.toString())
+            sortLastType = ListingAdapter.SortType.Rating;
+        else
+            sortLastType = ListingAdapter.SortType.Title;
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.menu_listing, menu);
+
+        // Update view icon for our current state
+        MenuItem viewItem = menu.getItem(1);
+        if (viewGrid)
+            viewItem.setIcon(R.drawable.ic_view_list_white_24dp);
+        else
+            viewItem.setIcon(R.drawable.ic_view_module_white_24dp);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -123,6 +167,7 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
                 return true;
             case R.id.view:
                 // Toggle view mode (grid vs list)
+                viewGrid = !viewGrid;
                 if (viewGrid) {
                     // Switch to grid, so show list icon
                     item.setIcon(R.drawable.ic_view_list_white_24dp);
@@ -132,14 +177,17 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
                     item.setIcon(R.drawable.ic_view_module_white_24dp);
                 }
                 setView(viewGrid);
-                viewGrid = !viewGrid;
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+
+    // TODO: Animate item transitions between list and grid views
+    // http://stackoverflow.com/questions/21551428/animate-transition-of-items-when-switching-content-view-between-listview-and-gri
     private void setView(boolean grid) {
+
         List<Movie> data = getData();
         RecyclerView.LayoutManager mgr = null;
         if (grid)
@@ -156,6 +204,16 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
         setData(data);
         rv.setLayoutManager(mgr);
         rv.setAdapter(adapter);
+    }
+
+    private void setLocation(String location) {
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            if (location != null)
+                ab.setSubtitle("Near " + location);
+            else
+                ab.setSubtitle(null);
+        }
     }
 
     @NonNull
@@ -237,6 +295,18 @@ public class ListingActivity extends MvpLceViewStateActivity<SwipeRefreshLayout,
     // Event that's fired when the background refresh is completed
     public void onEventMainThread(ListingModel.RefreshCompletedEvent value) {
         // Refresh completed, refresh our shown data
-        presenter.updateData(this);
+        if (value.successful) {
+            presenter.updateData(this);
+            setLocation(value.zipcode);
+        }
+    }
+
+    // Event that's fired when the location is found
+    public void onEventMainThread(ListingModel.LocationFoundEvent value) {
+        if (value.successful)
+        {
+            // Update UI with current location and refresh listing
+            loadData(true);
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.skylerbock.nowplaying.listing;
 import android.content.Context;
 
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
+import com.skylerbock.nowplaying.AppPreferences;
 import com.skylerbock.nowplaying.DBHelper;
 import com.skylerbock.nowplaying.movie.Movie;
 
@@ -18,8 +19,10 @@ public class ListingPresenter extends MvpBasePresenter<IListingView> implements 
         getView().showLoading(pullToRefresh);
 
         // Do a full refresh if requested, or if we don't have any movies in our database
-        if (pullToRefresh || !updateData(context))
-            new ListingModel().updateDatabase(context, null);
+        if (pullToRefresh || !updateData(context)) {
+            String zipcode = new AppPreferences(context).getKeyPrefsLocation();
+            new ListingModel().updateDatabase(context, zipcode);
+        }
     }
 
     @Override
