@@ -127,18 +127,15 @@ public class ListingModel {
                 }
             }
 
-            String body = NetworkHelper.getMovies(zipcode);
+            List<String> movies = NetworkHelper.getMovies(zipcode);
 
-            if (body != null) {
-                // Gets a list of imdb movie ids and their trailer
-                Map<String, MovieData> movies = getMovies(body);
-
+            if (movies != null) {
                 List<Movie> movieList = new ArrayList<>();
                 // Get movie information from omdb and populate the movie object
-                for (MovieData data : movies.values()) {
+                for (String imdbid : movies) {
 
                     // Retrieve the movie object
-                    Movie m = getMovie(data.imdb, data.trailer, data.mid);
+                    Movie m = getMovie(imdbid, null, null);
 
                     // Save the movie to our list to update the database with
                     if (m != null) {
