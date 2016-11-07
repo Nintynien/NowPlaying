@@ -20,7 +20,7 @@ public class ListingPresenter extends MvpBasePresenter<IListingView> implements 
 
         // Do a full refresh if requested, or if we don't have any movies in our database
         if (pullToRefresh || !updateData(context)) {
-            String zipcode = new AppPreferences(context).getKeyPrefsLocation();
+            String zipcode = null;//new AppPreferences(context).getKeyPrefsLocation();
             new ListingModel().updateDatabase(context, zipcode);
         }
     }
