@@ -10,8 +10,9 @@ import java.util.Date;
  * Created by sbock on 12/15/15.
  */
 public class AppPreferences {
-    public static final String KEY_PREFS_LAST_UPDATED = "last_updated";
-    public static final String KEY_PREFS_LOCATION = "location";
+    private static final String KEY_PREFS_LAST_UPDATED = "last_updated";
+    private static final String KEY_PREFS_LOCATION = "location";
+    private static final String KEY_PREFS_BLUR = "blur";
 
     private static final String APP_SHARED_PREFS = AppPreferences.class.getSimpleName(); //  Name of the file -.xml
     private SharedPreferences _sharedPrefs;
@@ -33,12 +34,21 @@ public class AppPreferences {
     }
 
     public String getKeyPrefsLocation() {
-        String zipcode = _sharedPrefs.getString(KEY_PREFS_LOCATION, null);
-        return zipcode;
+        return _sharedPrefs.getString(KEY_PREFS_LOCATION, null);
     }
 
     public void setKeyPrefsLocation(String zipcode) {
         _prefsEditor.putString(KEY_PREFS_LOCATION, zipcode);
+        _prefsEditor.commit();
+    }
+
+    public boolean getKeyPrefsBlur() {
+        return !BuildConfig.DEBUG && _sharedPrefs.getBoolean(KEY_PREFS_BLUR, true);
+    }
+
+    public void setKeyPrefsBlur(boolean blur)
+    {
+        _prefsEditor.putBoolean(KEY_PREFS_BLUR, blur);
         _prefsEditor.commit();
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.skylerbock.nowplaying.AppPreferences;
+import com.skylerbock.nowplaying.BuildConfig;
 import com.skylerbock.nowplaying.DBHelper;
 import com.skylerbock.nowplaying.NetworkHelper;
 import com.skylerbock.nowplaying.movie.Movie;
@@ -116,6 +117,57 @@ public class ListingModel {
         public void run() {
             Log.i(TAG, "UpdateThread starting");
             long start = System.currentTimeMillis();
+
+            // Check if we should blur posters
+            if (new AppPreferences(context).getKeyPrefsBlur())
+            {
+                String current = BuildConfig.VERSION_NAME;
+                String released = NetworkHelper.getPlayStoreVersion();
+
+                if (current.endsWith("(debug)"))
+                {
+                    Log.v(TAG, "Removing 'debug' from current version");
+                    current = current.substring(0, current.lastIndexOf("(debug)"));
+                }
+
+                if (released != null)
+                {
+                    boolean blur = false;
+
+                    current = current.trim();
+                    released = released.trim();
+
+                    String[] curParts = current.split("\\.");
+                    String[] relParts = released.split("\\.");
+
+                    // Compare each version part to see if this verion hasn't been released yet
+                    for(int i = 0; i < Math.min(curParts.length, relParts.length); i++)
+                    {
+                        int curVal = Integer.parseInt(curParts[i]);
+                        int relVal = Integer.parseInt(relParts[i]);
+
+                        if (curVal > relVal)
+                        {
+                            // Still need to blur
+                            blur = true;
+                            break;
+                        }
+                    }
+
+                    if (!blur)
+                    {
+                        // All parts of the smallest version match
+                        // if the released version still has more parts, we should still blur
+                        blur = relParts.length > curParts.length;
+                    }
+
+                    if (!blur)
+                    {
+                        // Stop bluring
+                        new AppPreferences(context).setKeyPrefsBlur(false);
+                    }
+                }
+            }
 
             // Get zipcode if we don't have one currently
             if (zipcode == null)

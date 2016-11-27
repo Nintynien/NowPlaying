@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.skylerbock.nowplaying.AppPreferences;
+import com.skylerbock.nowplaying.BlurTransformation;
 import com.skylerbock.nowplaying.movie.Movie;
 import com.skylerbock.nowplaying.R;
 import com.squareup.picasso.Picasso;
@@ -131,11 +133,23 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ViewHold
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Movie movie = movies.get(position);
-        Picasso.with(holder.poster.getContext())
-                .load(movie.getPosterUrl())
-                .placeholder(R.drawable.placeholder_poster)
-                .error(R.drawable.error_poster)
-                .into(holder.poster);
+
+        if (new AppPreferences(holder.poster.getContext()).getKeyPrefsBlur()) {
+            Picasso.with(holder.poster.getContext())
+                    .load(movie.getPosterUrl())
+                    .transform(new BlurTransformation())
+                    .placeholder(R.drawable.placeholder_poster)
+                    .error(R.drawable.error_poster)
+                    .into(holder.poster);
+        }
+        else {
+            Picasso.with(holder.poster.getContext())
+                    .load(movie.getPosterUrl())
+                    .placeholder(R.drawable.placeholder_poster)
+                    .error(R.drawable.error_poster)
+                    .into(holder.poster);
+        }
+
         holder.title.setText(movie.getTitle());
 
         if (holder.duration != null) {

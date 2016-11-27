@@ -12,18 +12,15 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
+import com.skylerbock.nowplaying.AppPreferences;
+import com.skylerbock.nowplaying.BlurTransformation;
 import com.skylerbock.nowplaying.R;
 import com.skylerbock.nowplaying.ShowtimesView;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -59,9 +56,17 @@ public class MovieActivity extends MvpActivity<IMovieView, IMoviePresenter> {
         }
 
         // Header image
-        Picasso.with(this)
-                .load(movie.getPosterUrl())
-                .into(header);
+        if (new AppPreferences(this).getKeyPrefsBlur()) {
+            Picasso.with(this)
+                    .load(movie.getPosterUrl())
+                    .transform(new BlurTransformation())
+                    .into(header);
+        }
+        else {
+            Picasso.with(this)
+                    .load(movie.getPosterUrl())
+                    .into(header);
+        }
 
         year.setText(movie.getYear());
         mpaa.setText(movie.getMpaaRating());

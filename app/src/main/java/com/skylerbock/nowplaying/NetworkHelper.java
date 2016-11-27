@@ -1,6 +1,5 @@
 package com.skylerbock.nowplaying;
 
-import android.os.Build;
 import android.util.Log;
 
 import com.squareup.okhttp.OkHttpClient;
@@ -9,6 +8,8 @@ import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -146,5 +147,32 @@ public class NetworkHelper {
             Log.i(TAG, "Took " + (System.currentTimeMillis() - start) + "ms to " + request.urlString());
 
         return json;
+    }
+
+    public static String getPlayStoreVersion()
+    {
+        String version = null;
+        long start = System.currentTimeMillis();
+
+        String appID = BuildConfig.APPLICATION_ID;
+
+        // Remove debug
+        if (appID.endsWith("debug"))
+        {
+            Log.v(TAG, "Removing 'debug' from application ID");
+            appID = appID.substring(0, appID.lastIndexOf("."));
+        }
+
+        try {
+            Document doc = Jsoup.connect("http://play.google.com/store/apps/details?id=" + appID).get();
+            version = doc.getElementsByAttributeValue("itemprop","softwareVersion").first().text();
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting version from Google Play", e);
+        }
+
+        if (BuildConfig.DEBUG)
+            Log.i(TAG, "Took " + (System.currentTimeMillis() - start) + "ms to http://play.google.com/store/apps/details?id=" + appID);
+
+        return version;
     }
 }
